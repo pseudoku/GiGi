@@ -14,7 +14,7 @@ use <skin.scad>
 /* 
  1) Robust Rim Job
  2) MCU Mount
- 3) pretty trackball structure
+ 3) Pretty trackball structure
 */
 
 $fn = 32;  
@@ -82,8 +82,8 @@ T0FrontH       = BFrontHeight + T0Buffer; //Adjusted height for T0
 T0BackH        = BBackHeight + T0Buffer;  //Adjuted height for T0
 
 //-----     Tenting Parameters
-tenting        = [0,0,0]; // tenting for enclusoure  
-plateHeight    = 23.5;       // height adjustment for enclusure 
+tenting        = [0,13,0]; // tenting for enclusoure  
+plateHeight    = 18;       // height adjustment for enclusure 
 
 
 //-----     Trackball Parameters
@@ -102,15 +102,15 @@ ColumnOrigin = [//[translation vec] [rotation vec1] [rotation vec2]
                 [[   18,     -unit/4,  0], [0, 0,  -0], [ 0, 90,  0]], //RING knuckle
                 [[ 35.0,   -unit*5/8,  6], [0, 5, -15], [ 0, 90,  0]], //PINKY 1 knuckle
                 [[ 52.0,   -unit*5/8, 10], [0,10, -15], [ 0, 90,  0]], //PINKY 2 knuckle
-                [[   -0,          -0,  0], [0,-5,   0], [ 0,  0,  0]]  //Thumb wrist origin
+                [[   -0,          -5,  0], [0,-5,   0], [ 0,  0,  0]]  //Thumb wrist origin
                ];
 
 // structure to pass to thumbplacement module
 ThumbPosition = [//[translation vec] [rotation vec1] 
-                  [[-29,-16, 2.9],[15, -60,  0]], //R0  original [[-33,-20, 8.5],[ 0,-130, 15]],
+                  [[-29,-13.5, 2.9],[15, -60,  0]], //R0  original [[-33,-20, 8.5],[ 0,-130, 15]],
                   [[-36,-22, -14],[15, -60,  0]], //R1
                   [[-43, -3,-9.9],[40, -60, -0]], //R2 
-                  [[-43, -3,-9.9],[40, -60, -0]]  //R3 
+                  [[-58,-26,-24],[ 0,15, 10]]     //R3 if you want another I'd put it here reluctantly not tested
                 ];
 
 //-------  and adjustment parameters 
@@ -174,6 +174,35 @@ RMAX         = R1;  // Set max rows on columns
 CStart       = C1;  // Set column to begin looping for the build
 CEnd         = C6;  // Set column to end for the build
 
+
+
+//##################     Main Calls    ##################
+//rotate([0,0,360*$t]){
+  difference(){
+  union(){
+    rotate(tenting)translate([0,0,plateHeight])BuildTopPlate(keyhole = true, trackball = false, channel = false, platethickness =-1);
+    BuildEnclosure(trackball = false, platethickness = -1);
+//    rotate(tenting)translate([0,0,plateHeight])translate(trackOrigin)rotate(trackTilt)TrackBall();
+  }
+  translate([0,0,-10])cube([200,100,20], center = true);
+//  rotate(tenting)translate([0,0,plateHeight])translate(trackOrigin)color("royalblue")sphere(d=trackR*2+.5,$fn= 64);
+}
+
+//mock ups for visualization 
+  //caps
+  rotate(tenting)translate([0,0,plateHeight]){
+//    BuildSet2();
+//    PlaceOnThumb(0)rotate([0,0,-0])Switch(colors = "Steelblue",clipLength = cutLen);
+//    PlaceOnThumb(1)rotate([0,0,-0])Switch(colors = "Steelblue",clipLength = cutLen);
+//    PlaceOnThumb(2)rotate([0,0,-0])Switch(colors = "Steelblue",clipLength = cutLen);
+////    PlaceOnThumb(3)rotate([0,0,-0])Switch(colors = "Steelblue",clipLength = cutLen);
+  }
+  //TrackBall
+//  rotate(tenting)translate([0,0,plateHeight])translate(trackOrigin)color("royalblue")sphere(d=trackR*2,$fn= 64);
+  
+  
+  
+  
 //#########  Supporting Modules for Main Builder Modules
 function hadamard(a, b) = !(len(a) > 0) ? a*b : [ for (i = [0:len(a) - 1]) hadamard(a[i], b[i])]; // elementwise mult
 
@@ -497,6 +526,7 @@ module BuildTopPlate(keyhole = false,  trackball = false, platethickness = 0)
       }       
       
       //----- Thumb Cluster Section
+      
       modPlateWidT(rows = R0,thickBuff = T0Buffer);
       modPlateWidT(rows = R1);
       modPlateWidT(rows = R2);
@@ -569,7 +599,7 @@ module BuildTopPlate(keyhole = false,  trackball = false, platethickness = 0)
         modBoarderLenT(true,FRONT, LEFT,  cutLen,       0,     T0BackH,      [0,0,0], R0, Buffer=T0Buffer);  
       }
 //      
-      //binding to Columns
+      //binding Cluster and Columns
       hull(){
         modBoarderWid(true,  BACK, LEFT,  cutLen,       0,BFrontHeight,    [0,BACK,TOP], R1, C1);
         modBoarderWid(true, FRONT, LEFT, cutLenM,       0, BBackHeight,   [0,FRONT,TOP], R0, C1);
@@ -635,7 +665,7 @@ module BuildTopPlate(keyhole = false,  trackball = false, platethickness = 0)
         modBoarderLen(true,  BACK,    0,       0, cutLenM, BBackHeight,       [0,BACK,TOP], R0, C2);
         modBoarderLen(true,  BACK,    0,       0, cutLenM, BBackHeight,    [0,BACK,BOTTOM], R0, C2, [1,RScale,1]);
       } 
-      #hull(){
+      hull(){
         modBoarderWidT(true,    0, LEFT,       0,       0,     T0BackH,         [LEFT,0,0], R0, Buffer=T0Buffer);
       
         modBoarderLen( true, BACK,    0,       0, cutLenM, BBackHeight,   [RIGHT,BACK,TOP], R0, C2);
@@ -645,7 +675,7 @@ module BuildTopPlate(keyhole = false,  trackball = false, platethickness = 0)
         modBoarderWidT(true, BACK, LEFT,       0,       0, BBackHeight,         [LEFT,0,0], R2);
         modBoarderLenT(true,FRONT, LEFT,  cutLen,       0,     T0BackH,            [0,0,0], R0, Buffer=T0Buffer);  
       
-        modBoarderLen( true, BACK,    0,       0, cutLenM, BBackHeight,    [LEFT,BACK,TOP], R0, C1);
+        modBoarderLen( true, BACK,    0,       0, cutLenM, BBackHeight,    [LEFT,0,TOP], R0, C1);
         modBoarderLen( true, BACK,    0,       0, cutLenM, BBackHeight,    [LEFT,BACK,TOP], R0, C2);
       
         modBoarderLen(true,  BACK,    0,       0, cutLenM, BBackHeight,    [LEFT,0,BOTTOM], R0, C1, [1,RScale,1]);
@@ -659,13 +689,14 @@ module BuildTopPlate(keyhole = false,  trackball = false, platethickness = 0)
         modBoarderLen(true,  BACK, LEFT,       0, cutLenM, BBackHeight,    [LEFT,0,BOTTOM], R0, C1, [1,RScale,1]);  
         modBoarderWid(true, FRONT, LEFT, cutLenM,       0, BBackHeight,    [0,BACK,BOTTOM], R0, C1, [RScale,1,1]); 
       }
-//      #hull(){
-//        modBoarderLenT(true,FRONT, LEFT, cutLenM,       0, BBackHeight,            [0,0,0], R2); 
-//      
-//        modBoarderWid(true, FRONT, LEFT, cutLenM,       0,  BBackHeight,      [0,BACK,TOP], R0, C1);   
-//        modBoarderWid(true, FRONT, LEFT, cutLenM,       0,  BBackHeight,   [0,BACK,BOTTOM], R0, C1, [RScale,1,1]); 
-//      }
+      hull(){    
+        modBoarderLenT(true,FRONT, LEFT, cutLenM,       0, BBackHeight,            [0,0,0], R2); 
       
+        modBoarderWid(true, FRONT, LEFT, cutLenM,       0,  BBackHeight,      [0,BACK,TOP], R0, C1);   
+        modBoarderWid(true, FRONT, LEFT, cutLenM,       0,  BBackHeight,   [0,BACK,BOTTOM], R0, C1, [RScale,1,1]); 
+        modBoarderWid(true,  BACK, LEFT,  cutLen,       0,BFrontHeight,    [0,BACK,TOP], R1, C1); 
+        modBoarderWid(true,  BACK, LEFT,  cutLen,       0,BFrontHeight, [0,BACK,BOTTOM], R1, C1,[RScale,1,1]);
+      }
       
       //Tarckballs
       if(trackball == true){
@@ -902,17 +933,17 @@ module BuildEnclosure(platethickness = 0, trackball = false, Jacks = false)
       if (trackball == false){ 
         hull(){
           transEnclose(){       
-            modBoarderLen(true,BACK,    0,       0, cutLenM,  BBackHeight,    [0,0,BOTTOM], R0, C2, [1,RScale,1]);
+            modBoarderLen(true,BACK,    0,       0, cutLenM,  BBackHeight, [RIGHT,0,BOTTOM], R0, C2, [1,RScale,1]);
             modBoarderLen(true,BACK,    0,       0, cutLenM,  BBackHeight, [LEFT,0,BOTTOM], R0, C4, [1,RScale,1]);
           }
           projectEnclose(){ 
-            modBoarderLen(true,BACK,    0,       0, cutLenM,  BBackHeight,    [0,0,BOTTOM], R0, C2, [1,EScale,1]);
+            modBoarderLen(true,BACK,    0,       0, cutLenM,  BBackHeight, [RIGHT,0,BOTTOM], R0, C2, [1,EScale,1]);
             modBoarderLen(true,BACK,    0,       0, cutLenM,  BBackHeight, [LEFT,0,BOTTOM], R0, C4, [1,EScale,1]);
           }
         }
         hull(){
           transEnclose(){  
-            modBoarderLen(true,  BACK,    0,       0, cutLenM, BBackHeight,  [LEFT,0,BOTTOM], R0, C4, [1,RScale,1]);
+            modBoarderLen(true,  BACK,    0,       0, cutLenM, BBackHeight,  [0,0,BOTTOM], R0, C4, [1,RScale,1]);
             modBoarderWid(true,     0, LEFT,       0, cutLenM, BBackHeight, [0,FRONT,BOTTOM], R0, C5);
             modBoarderWid(true,     0, LEFT,       0, cutLenM, BBackHeight,  [0,BACK,BOTTOM], R1, C5);
           }
@@ -937,27 +968,19 @@ module BuildEnclosure(platethickness = 0, trackball = false, Jacks = false)
         
         //thumb track section
         hull(){
-          transEnclose(){  
-            modBoarderLenT(true, FRONT, LEFT, cutLen,       0, BBackHeight, [RIGHT,FRONT,0], R0, Buffer = T0Buffer);
-            
-            modBoarderLen(true,  BACK,    0,       0, cutLenM, BBackHeight, [LEFT,BACK,TOP], R0, C2);
-            modBoarderLen(true,  BACK,    0,       0, cutLenM, BBackHeight, [LEFT,0,BOTTOM], R0, C2, [1,RScale,1]);
-          }
+          transEnclose(){
+            modBoarderLenT(true, BACK, LEFT, cutLen,       0, BBackHeight, [LEFT,BACK,BOTTOM], R0);
+            modBoarderWidT(true, BACK, LEFT, cutLen,       0, BBackHeight, [LEFT,BACK,BOTTOM], R0);
+            modBoarderLen( true, BACK,    0,      0, cutLenM, BBackHeight,   [RIGHT,0,BOTTOM], R0, C2, [1,RScale,1]);
+            modBoarderLen( true, BACK,    0,      0, cutLenM, BBackHeight,   [RIGHT,BACK,TOP], R0, C2);
+          }  
           projectEnclose(){
-            modBoarderLenT(true, FRONT, LEFT, cutLen,       0, BBackHeight, [RIGHT,FRONT,0], R0, [EScale,1,1]);
-            modBoarderLen(true,  BACK,    0,       0, cutLenM, BBackHeight, [LEFT,0,BOTTOM], R0, C2, [1,EScale,1]);        
-          }
+            modBoarderLen(true,BACK,    0,       0, cutLenM,  BBackHeight,   [RIGHT,0,BOTTOM], R0, C2, [1,EScale,1]);
+            modBoarderWidT(true, BACK, LEFT, cutLen,       0, BBackHeight, [LEFT,BACK,BOTTOM], R0);
+            modBoarderLenT(true, BACK, LEFT, cutLen,       0, BBackHeight,    [LEFT,0,BOTTOM], R0, [1,EScale,1]);
+          }   
         }
-        hull(){
-          transEnclose(){ 
-            modBoarderLenT(true,  BACK, LEFT, cutLen,       0,           2,     [RIGHT,0,0], R0, Buffer = T0Buffer);
-            modBoarderLenT(true, FRONT, LEFT, cutLen,       0,           0,     [RIGHT,0,0], R0, Buffer = T0Buffer);
-          }
-          projectEnclose(){
-            modBoarderLenT(true,  BACK, LEFT, cutLen,       0, BBackHeight,[RIGHT,0,0], R0, [EScale,EScale,1]);
-            modBoarderLenT(true, FRONT, LEFT, cutLen,       0, BBackHeight,     [RIGHT,0,0], R0, [EScale,1,1]);
-          }
-        }
+
       }
       else{
        hull(){
@@ -1192,13 +1215,6 @@ module TrackBall(){
     rotate(PCBA)translate([0,0,-42/2])PCB();
   }
 }
-
-module mockPCB(thickness,offsets ){
-  for(cols = [CStart:C4]){
-    color("blue")PlaceColumnOrigin(cols)translate([25,offsets,0])rotate([90,0,0])cube([28,15,thickness],center = true);
-  }
-  color("blue")PlaceColumnOrigin(C5)translate([18,offsets+1,7.5])rotate([90,0,0])rotate([-10,0,0])cube([35,25,thickness],center = true);
-}
 //##################   Section E:: Key Switches and Caps   ##################  
 module BuildSet2()
 {
@@ -1227,30 +1243,6 @@ module BuildSetCaps()
   }
 }
 
-//##################   Section F:: Main Calls    ##################
-//rotate([0,0,360*$t]){
-  difference(){
-  union(){
-    rotate(tenting)translate([0,0,plateHeight])BuildTopPlate(keyhole = true, trackball = false, channel = false, platethickness =-1);
-//    BuildEnclosure(trackball = true, platethickness = -1);
-//    rotate(tenting)translate([0,0,plateHeight])mockPCB(1, 3);    
-    rotate(tenting)translate([0,0,plateHeight])translate(trackOrigin)rotate(trackTilt)TrackBall();
-  }
-//  translate([0,0,-10])cube([200,100,20], center = true);
-  rotate(tenting)translate([0,0,plateHeight])translate(trackOrigin)color("royalblue")sphere(d=trackR*2+.5,$fn= 64);
-}
-
-//mock ups for visualization 
-  //caps
-  rotate(tenting)translate([0,0,plateHeight]){
-//    BuildSet2();
-    PlaceOnThumb(0)rotate([0,0,-0])Switch(colors = "Steelblue",clipLength = cutLen);
-    PlaceOnThumb(1)rotate([0,0,-0])Switch(colors = "Steelblue",clipLength = cutLen);
-    PlaceOnThumb(2)rotate([0,0,-0])Switch(colors = "Steelblue",clipLength = cutLen);
-    PlaceOnThumb(3)rotate([0,0,-0])Switch(colors = "Steelblue",clipLength = cutLen);
-  }
-  //TrackBall
-  rotate(tenting)translate([0,0,plateHeight])translate(trackOrigin)color("royalblue")sphere(d=trackR*2,$fn= 64);
 
   
   
